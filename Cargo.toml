@@ -9,7 +9,7 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 creator = "0.3.5"
-bevy = "0.4.0"
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "61b181a699ed2b450bebc8c14d96c6af55fa41cf" }
 
 [package.metadata.android]
 build_targets = ["aarch64-linux-android"]
