@@ -1,3 +1,3 @@
 fn main() {
-    {{project-name}}::main();
+    {{crate_name}}::main();
 }
