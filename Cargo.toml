@@ -9,3 +9,8 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 creator = "0.3.9"
+
+[package.metadata]
+icon = "ic_launcher"
+android_res = "res/android"
+apple_res = "res/apple"
