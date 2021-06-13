@@ -12,7 +12,7 @@ creator = "0.3.9"
 bevy = { git = "https://github.com/TheRawMeatball/bevy", branch = "android-support" }
 
 [package.metadata]
-apk_label = "{{project-name}}"
+app_name = "{{project-name}}"
 icon = "ic_launcher"
 target_sdk_version = 30
 
