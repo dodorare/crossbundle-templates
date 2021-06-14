@@ -15,7 +15,7 @@ fn setup(
 ) {
     let texture_handle = asset_server.load("image.png");
     commands
-        .spawn(OrthographicCameraBundle::new_2d())
+        .spawn(Camera2dBundle::default())
         .spawn(SpriteBundle {
             material: materials.add(texture_handle.into()),
             ..Default::default()
