@@ -9,14 +9,15 @@ pub fn main() {
 }
 
 fn setup(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let texture_handle = asset_server.load("image.png");
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(SpriteBundle {
-        material: materials.add(texture_handle.into()),
-        ..Default::default()
-    });
+    commands
+        .spawn(OrthographicCameraBundle::new_2d())
+        .spawn(SpriteBundle {
+            material: materials.add(texture_handle.into()),
+            ..Default::default()
+        });
 }
