@@ -5,23 +5,46 @@
 #
 #     https://docs.fastlane.tools/actions
 #
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
 
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
-default_platform(:ios)
-
-platform :ios do
-  desc "Description of what the lane does"
-  lane :custom_lane do
-    # add actions here: https://docs.fastlane.tools/actions
-  end
+lane :android do
+  desc "Builds and publishes Android app to Google Play Market"
+  creator_build_android(
+    project_path: "./",
+    sign_key_path: "/Users/enfipy/Desktop/creator_explorer.jks",
+    sign_key_pass: "123456",
+    build_envs: "RUSTFLAGS='-L/opt/homebrew/lib/gcc/11/gcc/aarch64-apple-darwin20/11.1.0'" # only for the M1 Macbooks
+  )
+  validate_play_store_json_key(
+    json_key: "~/Desktop/pc-api.json"
+  )
+  upload_to_play_store(
+    package_name: "com.enfipy.creator_explorer",
+    apk: "./target/android/release/explorer.apk",
+    json_key: "~/Desktop/pc-api.json",
+    release_status: "draft",
+    track: "internal"
+  )
 end
 
-lane :build_ios do
-  creator() # call the creator action
+lane :ios do
+  desc "Builds and publishes iOS app to Apple TestFlight"
+  get_certificates(
+    username: "enfipy@gmail.com"
+  )
+  get_provisioning_profile(
+    username: "enfipy@gmail.com",
+    app_identifier: "com.enfipy.explorer"
+  )
+  creator_build_ios(
+    project_path: "./",
+    profile_path: "../../AppStore_com.enfipy.explorer.mobileprovision",
+    team_id: "V4SUV789T7",
+    identity: "AB50EE3454AAE27E6BC821103DA3D998C048F9E8"
+  )
+  upload_to_testflight(
+    username: "enfipy@gmail.com",
+    app_identifier: "com.enfipy.explorer",
+    apple_id: "1571696903",
+    ipa: "./target/apple/aarch64-apple-ios/release/explorer.ipa"
+  )
 end

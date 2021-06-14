@@ -19,7 +19,10 @@ crate-type = ["lib", "cdylib"]
 app_name = "{{project-name}}"
 target_sdk_version = 30
 icon = "ic_launcher"
+version_name = "0.5"
+version_code = "5"
 
+android_app_id = "com.enfipy.creator_explorer"
 android_build_targets = ["aarch64-linux-android"]
 android_assets = "assets"
 android_res = "res/android"

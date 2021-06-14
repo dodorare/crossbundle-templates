@@ -1,4 +1,3 @@
-// mod button;
 mod explorer;
 
 use bevy::{core::FixedTimestep, prelude::*};
