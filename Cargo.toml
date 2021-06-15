@@ -8,8 +8,8 @@ edition = "2018"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-creator = { git = "https://github.com/creator-rs/creator", branch = "bevy-fix" }
-bevy = { git = "https://github.com/creator-rs/bevy.git", branch = "bevy-0.4" }
+creator = "0.4.1"
+bevy = { git = "https://github.com/creator-rs/bevy.git", rev = "3ebf26249b698c8379443f73a1cbeb57779e3e6d" }
 
 [package.metadata]
 app_name = "{{project-name}}"
