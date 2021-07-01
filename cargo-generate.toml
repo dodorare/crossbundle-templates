@@ -1,2 +1,2 @@
 [template]
-exclude = ["*.png"]
+exclude = ["*res/", "assets/"]
