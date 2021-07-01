@@ -1,2 +1,2 @@
 [template]
-exclude = ["res/", "fastlane/", "assets/", "Gemfile", "Gemfile.lock"]
+exclude = ["res/", "fastlane/", "assets/", "*.lock"]
