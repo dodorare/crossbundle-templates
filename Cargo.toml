@@ -22,7 +22,7 @@ icon = "ic_launcher"
 version_name = "0.5"
 version_code = "5"
 
-android_app_id = "com.enfipy.creator_explorer"
+android_app_id = "com.rust.{{crate_name}}"
 android_build_targets = ["aarch64-linux-android"]
 android_assets = "assets"
 android_res = "res/android"

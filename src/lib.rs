@@ -13,7 +13,7 @@ pub fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
         .insert_resource(WindowDescriptor {
-            title: "Explorer".to_string(),
+            title: "{{project-name}}".to_string(),
             width: 320.0,
             height: 600.0,
             ..Default::default()
