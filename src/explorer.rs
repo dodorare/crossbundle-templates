@@ -79,31 +79,25 @@ pub enum BlockTexts {
 
 pub fn explorer_text_updater(
     mut channel: ResMut<ExplorerStateChannel>,
-    mut interaction_query: Query<(&mut Text, &Block), (With<Block>,)>,
+    mut interaction_query: Query<(&mut Text, &Block)>,
 ) {
     let state = channel.rx.blocking_recv().unwrap();
     for (mut text, block) in interaction_query.iter_mut() {
         match block {
             Block::Best(texts) => match texts {
-                BlockTexts::Number => {
-                    text.sections[0].value = format!("Number: {}", state.best_block_number)
-                }
-                BlockTexts::Hash => {
-                    text.sections[0].value = format!("Hash: {}", state.best_block_hash)
-                }
+                BlockTexts::Number => text.value = format!("Number: {}", state.best_block_number),
+                BlockTexts::Hash => text.value = format!("Hash: {}", state.best_block_hash),
                 BlockTexts::Parent => {
-                    text.sections[0].value = format!("Parent: {}", state.best_block_parent_hash)
+                    text.value = format!("Parent: {}", state.best_block_parent_hash)
                 }
             },
             Block::Finalized(texts) => match texts {
                 BlockTexts::Number => {
-                    text.sections[0].value = format!("Number: {}", state.finalized_block_number)
+                    text.value = format!("Number: {}", state.finalized_block_number)
                 }
-                BlockTexts::Hash => {
-                    text.sections[0].value = format!("Hash: {}", state.finalized_block_hash)
-                }
+                BlockTexts::Hash => text.value = format!("Hash: {}", state.finalized_block_hash),
                 BlockTexts::Parent => {
-                    text.sections[0].value = format!("Parent: {}", state.best_block_parent_hash)
+                    text.value = format!("Parent: {}", state.best_block_parent_hash)
                 }
             },
         };
@@ -111,15 +105,15 @@ pub fn explorer_text_updater(
 }
 
 pub fn explorer_ui(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let font_handle: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn(CameraUiBundle::default());
     // root node (padding)
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 #[cfg(not(target_os = "ios"))]
@@ -143,7 +137,7 @@ pub fn explorer_ui(
         .with_children(|parent| {
             // explorer node
             parent
-                .spawn_bundle(NodeBundle {
+                .spawn(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                         flex_direction: FlexDirection::ColumnReverse,
@@ -156,7 +150,7 @@ pub fn explorer_ui(
                 .with_children(|parent| {
                     // best block
                     parent
-                        .spawn_bundle(NodeBundle {
+                        .spawn(NodeBundle {
                             style: Style {
                                 size: Size::new(Val::Percent(100.0), Val::Auto),
                                 padding: Rect::all(Val::Percent(3.0)),
@@ -168,65 +162,65 @@ pub fn explorer_ui(
                             ..Default::default()
                         })
                         .with_children(|parent| {
-                            parent.spawn_bundle(TextBundle {
-                                text: Text::with_section(
-                                    "Best block",
-                                    TextStyle {
-                                        font: font_handle.clone(),
+                            parent.spawn(TextBundle {
+                                text: Text {
+                                    value: "Best block".to_string(),
+                                    font: font_handle.clone(),
+                                    style: TextStyle {
                                         font_size: TEXT_FONT_SIZE / 1.5,
                                         color: Color::rgb(0.9, 0.9, 0.9),
+                                        ..Default::default()
                                     },
-                                    Default::default(),
-                                ),
+                                },
                                 ..Default::default()
                             });
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Number: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Number: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Best(BlockTexts::Number));
+                                .with(Block::Best(BlockTexts::Number));
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Hash: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Hash: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Best(BlockTexts::Hash));
+                                .with(Block::Best(BlockTexts::Hash));
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Parent: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Parent: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Best(BlockTexts::Parent));
+                                .with(Block::Best(BlockTexts::Parent));
                         });
 
                     // finalized block
                     parent
-                        .spawn_bundle(NodeBundle {
+                        .spawn(NodeBundle {
                             style: Style {
                                 size: Size::new(Val::Percent(100.0), Val::Auto),
                                 margin: Rect {
@@ -242,60 +236,60 @@ pub fn explorer_ui(
                             ..Default::default()
                         })
                         .with_children(|parent| {
-                            parent.spawn_bundle(TextBundle {
-                                text: Text::with_section(
-                                    "Finalized block",
-                                    TextStyle {
-                                        font: font_handle.clone(),
+                            parent.spawn(TextBundle {
+                                text: Text {
+                                    value: "Finalized block".to_string(),
+                                    font: font_handle.clone(),
+                                    style: TextStyle {
                                         font_size: TEXT_FONT_SIZE / 1.5,
                                         color: Color::rgb(0.9, 0.9, 0.9),
+                                        ..Default::default()
                                     },
-                                    Default::default(),
-                                ),
+                                },
                                 ..Default::default()
                             });
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Number: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Number: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Finalized(BlockTexts::Number));
+                                .with(Block::Finalized(BlockTexts::Number));
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Hash: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Hash: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Finalized(BlockTexts::Hash));
+                                .with(Block::Finalized(BlockTexts::Hash));
                             parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Parent: ",
-                                        TextStyle {
-                                            font: font_handle.clone(),
+                                .spawn(TextBundle {
+                                    text: Text {
+                                        value: "Parent: ".to_owned(),
+                                        font: font_handle.clone(),
+                                        style: TextStyle {
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
+                                            ..Default::default()
                                         },
-                                        Default::default(),
-                                    ),
+                                    },
                                     ..Default::default()
                                 })
-                                .insert(Block::Finalized(BlockTexts::Parent));
+                                .with(Block::Finalized(BlockTexts::Parent));
                         });
                 });
         });
