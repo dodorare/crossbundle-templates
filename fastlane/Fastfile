@@ -11,14 +11,13 @@ lane :android do
   creator_build_android(
     project_path: "./",
     sign_key_path: "/Users/enfipy/Desktop/creator_explorer.jks",
-    sign_key_pass: "123456",
-    build_envs: "RUSTFLAGS='-L/opt/homebrew/lib/gcc/11/gcc/aarch64-apple-darwin20/11.1.0'" # only for the M1 Macbooks
+    sign_key_pass: "123456"
   )
   validate_play_store_json_key(
     json_key: "~/Desktop/pc-api.json"
   )
   upload_to_play_store(
-    package_name: "com.enfipy.creator_explorer",
+    package_name: "Creator Explorer",
     apk: "./target/android/release/explorer.apk",
     json_key: "~/Desktop/pc-api.json",
     release_status: "draft",
