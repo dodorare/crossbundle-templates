@@ -1,23 +1,28 @@
 [package]
-name = "{{project-name}}"
+name = "bevy-explorer"
 version = "0.1.0"
 authors = ["{{authors}}"]
-edition = "2018"
-
-[lib]
-crate-type = ["lib", "cdylib"]
+edition = "2021"
 
 [dependencies]
-creator = "0.4.1"
-bevy = { git = "https://github.com/creator-rs/bevy.git", rev = "3ebf26249b698c8379443f73a1cbeb57779e3e6d" }
+crossbow  = "0.1.3"
+bevy = { version = "0.6.0", features = ["mp3"] }
+anyhow = "1.0"
+substrate-subxt = "0.15"
+tokio = { version = "1.2", features = ["sync", "macros"] }
 
 [package.metadata]
-app_name = "{{project-name}}"
+app_name = "Bevy Explorer"
 icon = "ic_launcher"
 target_sdk_version = 30
 
+android_build_targets = ["aarch64-linux-android"]
 android_assets = "assets"
 android_res = "res/android"
 
+apple_build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
 apple_assets = "assets"
 apple_res = "res/apple"
+
+[[package.metadata.android_permissions]]
+name = "android.permission.INTERNET"
