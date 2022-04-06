@@ -2,13 +2,12 @@
 name = "{{project-name}}"
 version = "0.1.0"
 authors = ["{{authors}}"]
-edition = "2018"
-
-[lib]
-crate-type = ["lib", "cdylib"]
+edition = "2021"
 
 [dependencies]
-creator = "0.4.1"
+crossbow = { git = "https://github.com/dodorare/crossbow" }
+anyhow = "1.0"
+macroquad = "0.3"
 
 [package.metadata]
 icon = "ic_launcher"
