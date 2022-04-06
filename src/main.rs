@@ -1,3 +1,4 @@
-fn main() {
-    {{crate_name}}::main();
+#[macroquad::main("{{crate_name}}")]
+async fn main() -> anyhow::Result<()> {
+    Ok(())
 }
