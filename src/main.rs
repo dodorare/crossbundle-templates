@@ -1,4 +1,4 @@
-#[crossbow::crossbundle_main("project_name")]
-fn main() {
-    println!("Hello world");
+#[macroquad::main("project_name")]
+async fn main() -> anyhow::Result<()> {
+    Ok(())
 }
