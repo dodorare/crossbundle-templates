@@ -10,7 +10,7 @@ log = "0.4"
 anyhow = "1.0"
 macroquad = "0.3"
 
-[package.metadata.android]
+[package.metadata]
 app_name = "{{project-name}}"
 assets = ["assets"]
 
