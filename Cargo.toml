@@ -12,16 +12,12 @@ macroquad = "0.3"
 
 [package.metadata.android]
 app_name = "{{project-name}}"
-target_sdk_version = 30
-version_code = 1
-icon = "ic_launcher"
+assets = ["assets"]
 
-build_targets = ["aarch64-linux-android"]
-assets = "assets"
-res = "res/android"
+[package.metadata.android]
+release_build_targets = ["aarch64-linux-android"]
+resources = ["res/android"]
 
 [package.metadata.apple]
-app_name = "{{project-name}}"
-build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
-assets = "assets"
-res = "res/apple"
+release_build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
+resources = ["res/apple"]
