@@ -8,7 +8,10 @@ edition = "2021"
 crossbow = "*"
 log = "0.4"
 anyhow = "1.0"
-macroquad = "0.3"
+macroquad = "0.3.7"
+
+[patch.crates-io]
+miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "d67ffe6950cf73df307e2d23aaa4726f14399985" }
 
 [package.metadata]
 app_name = "{{project-name}}"
