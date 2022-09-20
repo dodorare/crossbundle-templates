@@ -1,11 +1,20 @@
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
-use substrate_subxt::{ClientBuilder, KusamaRuntime};
+use jsonrpsee::core::client::CertificateStore;
+use subxt::{
+    rpc::{RpcClientBuilder, Uri, WsTransportClientBuilder},
+    OnlineClient, PolkadotConfig,
+};
 use tokio::sync::mpsc;
+
+#[subxt::subxt(runtime_metadata_path = "res/polkadot_metadata.scale")]
+pub mod bevy_explorer {}
 
 #[cfg(not(target_os = "android"))]
 pub const TEXT_FONT_SIZE: f32 = 30.0;
 #[cfg(target_os = "android")]
 pub const TEXT_FONT_SIZE: f32 = 30.0;
+pub const URL: &str = "wss://rpc.polkadot.io:443";
+pub const BUFFER: usize = 1;
 
 pub struct ExplorerStateChannel {
     pub tx: mpsc::Sender<ExplorerState>,
@@ -14,40 +23,60 @@ pub struct ExplorerStateChannel {
 
 impl ExplorerStateChannel {
     pub fn new() -> Self {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = mpsc::channel(BUFFER);
         Self { tx, rx }
     }
 }
 
-pub fn explorer_startup(task_pool: Res<AsyncComputeTaskPool>, channel: Res<ExplorerStateChannel>) {
+pub fn explorer_startup(channel: Res<ExplorerStateChannel>) {
+    let thread_pool = AsyncComputeTaskPool::get();
     let tx = channel.tx.clone();
-    task_pool
+
+    #[cfg(target_os = "android")]
+    let certificate = CertificateStore::WebPki;
+    #[cfg(not(target_os = "android"))]
+    let certificate = CertificateStore::Native;
+
+    thread_pool
         .spawn(async move {
-            println!("Connecting to Substrate Node");
-            let client = ClientBuilder::<KusamaRuntime>::new()
-                // .set_url("wss://rpc.polkadot.io")
-                .set_url("ws://207.154.228.105:9944")
-                .build()
-                .await
-                .unwrap();
-            loop {
-                let (best, finalized) =
-                    tokio::try_join!(client.block_hash(None), client.finalized_head()).unwrap();
-                let (best, finalized) =
-                    tokio::try_join!(client.header(best), client.header(Some(finalized))).unwrap();
-                let best = best.unwrap();
-                let finalized = finalized.unwrap();
-                tx.send(ExplorerState {
-                    best_block_number: best.number,
-                    best_block_hash: best.hash().to_string(),
-                    best_block_parent_hash: best.parent_hash.to_string(),
-                    finalized_block_number: finalized.number,
-                    finalized_block_hash: finalized.hash().to_string(),
-                    finalized_block_parent_hash: finalized.parent_hash.to_string(),
-                })
-                .await
-                .unwrap();
-            }
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                info!("Connecting to Substrate Node");
+                let url: Uri = URL.parse().unwrap();
+                let (sender, receiver) = WsTransportClientBuilder::default()
+                    .certificate_store(certificate)
+                    .build(url)
+                    .await
+                    .unwrap();
+                let rpc_client = RpcClientBuilder::default().build_with_tokio(sender, receiver);
+
+                let api = OnlineClient::<PolkadotConfig>::from_rpc_client(rpc_client)
+                    .await
+                    .unwrap();
+
+                let client = api.rpc();
+                loop {
+                    let (block_hash, finalized_head) =
+                        tokio::try_join!(client.block_hash(None), client.finalized_head()).unwrap();
+                    let (best, finalized) = tokio::try_join!(
+                        client.header(block_hash),
+                        client.header(Some(finalized_head))
+                    )
+                    .unwrap();
+                    let best = best.unwrap();
+                    let finalized = finalized.unwrap();
+                    tx.send(ExplorerState {
+                        best_block_number: best.number,
+                        best_block_hash: best.hash().to_string(),
+                        best_block_parent_hash: best.parent_hash.to_string(),
+                        finalized_block_number: finalized.number,
+                        finalized_block_hash: finalized.hash().to_string(),
+                        finalized_block_parent_hash: finalized.parent_hash.to_string(),
+                    })
+                    .await
+                    .ok();
+                }
+            });
         })
         .detach();
 }
@@ -125,22 +154,25 @@ pub fn explorer_text_updater(
 }
 
 pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+    #[cfg(target_os = "windows")]
+    let font_handle: Handle<Font> = get_assets_path(asset_server);
+    #[cfg(not(target_os = "windows"))]
     let font_handle: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(Camera2dBundle::default());
     // Root node (padding)
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 #[cfg(not(target_os = "ios"))]
-                padding: Rect {
+                padding: UiRect {
                     left: Val::Percent(6.0),
                     right: Val::Percent(6.0),
                     top: Val::Percent(6.0),
                     bottom: Val::Percent(18.0),
                 },
                 #[cfg(target_os = "ios")]
-                padding: Rect {
+                padding: UiRect {
                     top: Val::Percent(6.0),
                     ..Default::default()
                 },
@@ -169,7 +201,7 @@ pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         .spawn_bundle(NodeBundle {
                             style: Style {
                                 size: Size::new(Val::Percent(100.0), Val::Auto),
-                                padding: Rect::all(Val::Percent(3.0)),
+                                padding: UiRect::all(Val::Percent(3.0)),
                                 flex_direction: FlexDirection::ColumnReverse,
                                 align_items: AlignItems::FlexStart,
                                 ..Default::default()
@@ -179,55 +211,51 @@ pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         })
                         .with_children(|parent| {
                             parent.spawn_bundle(TextBundle {
-                                text: Text::with_section(
+                                text: Text::from_section(
                                     "Best block",
                                     TextStyle {
                                         font: font_handle.clone(),
                                         font_size: TEXT_FONT_SIZE / 1.5,
                                         color: Color::rgb(0.9, 0.9, 0.9),
                                     },
-                                    Default::default(),
                                 ),
                                 ..Default::default()
                             });
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Number: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
                                 .insert(Block::Best(BlockTexts::Number));
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Hash: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
                                 .insert(Block::Best(BlockTexts::Hash));
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Parent: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
@@ -239,11 +267,11 @@ pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         .spawn_bundle(NodeBundle {
                             style: Style {
                                 size: Size::new(Val::Percent(100.0), Val::Auto),
-                                margin: Rect {
+                                margin: UiRect {
                                     top: Val::Percent(4.0),
                                     ..Default::default()
                                 },
-                                padding: Rect::all(Val::Percent(3.0)),
+                                padding: UiRect::all(Val::Percent(3.0)),
                                 flex_direction: FlexDirection::ColumnReverse,
                                 align_items: AlignItems::FlexStart,
                                 ..Default::default()
@@ -253,55 +281,51 @@ pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         })
                         .with_children(|parent| {
                             parent.spawn_bundle(TextBundle {
-                                text: Text::with_section(
+                                text: Text::from_section(
                                     "Finalized block",
                                     TextStyle {
                                         font: font_handle.clone(),
                                         font_size: TEXT_FONT_SIZE / 1.5,
                                         color: Color::rgb(0.9, 0.9, 0.9),
                                     },
-                                    Default::default(),
                                 ),
                                 ..Default::default()
                             });
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Number: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
                                 .insert(Block::Finalized(BlockTexts::Number));
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Hash: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
                                 .insert(Block::Finalized(BlockTexts::Hash));
                             parent
                                 .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
+                                    text: Text::from_section(
                                         "Parent: ",
                                         TextStyle {
                                             font: font_handle.clone(),
                                             font_size: TEXT_FONT_SIZE,
                                             color: Color::rgb(0.9, 0.9, 0.9),
                                         },
-                                        Default::default(),
                                     ),
                                     ..Default::default()
                                 })
@@ -309,4 +333,12 @@ pub fn explorer_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         });
                 });
         });
+}
+
+/// Workaround. Failed to get assets on windows from the .load() method through the
+/// relative path to asset
+fn get_assets_path(asset_server: Res<AssetServer>) -> Handle<Font> {
+    let font_path = std::path::PathBuf::from("fonts").join("FiraSans-Bold.ttf");
+    let font_handle: Handle<Font> = asset_server.load(font_path);
+    font_handle
 }

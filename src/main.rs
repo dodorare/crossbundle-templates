@@ -2,11 +2,11 @@
 
 mod explorer;
 
-use bevy::{core::FixedTimestep, prelude::*};
+use bevy::{prelude::*, time::FixedTimestep};
 use explorer::*;
 
 fn main() {
-    println!("Initialization.");
+    info!("Initialization.");
     std::thread::sleep(std::time::Duration::from_secs(2));
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
@@ -18,14 +18,14 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .insert_resource(ExplorerStateChannel::new())
-        .add_startup_system(explorer_startup.system())
-        .add_startup_system(explorer_ui.system())
+        .add_startup_system(explorer_startup)
+        .add_startup_system(explorer_ui)
         .add_stage_after(
             CoreStage::Update,
             "my_stage",
             SystemStage::parallel()
                 .with_run_criteria(FixedTimestep::steps_per_second(1.0))
-                .with_system(explorer_text_updater.system()),
+                .with_system(explorer_text_updater),
         )
         .run();
 }
