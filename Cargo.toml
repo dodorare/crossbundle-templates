@@ -5,11 +5,23 @@ authors = ["{{authors}}"]
 edition = "2021"
 
 [dependencies]
-crossbow = { git = "https://github.com/dodorare/crossbow" }
+crossbow = "*"
+log = "0.4"
 anyhow = "1.0"
-macroquad = "0.3"
+macroquad = "=0.3.7"
+
+[patch.crates-io]
+miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "d67ffe6950cf73df307e2d23aaa4726f14399985" }
 
 [package.metadata]
-icon = "ic_launcher"
-android_res = "res/android"
-apple_res = "res/apple"
+app_name = "Macroquad"
+assets = ["assets"]
+icon = "assets/icon.png"
+
+[package.metadata.android]
+app_wrapper = "quad"
+release_build_targets = ["aarch64-linux-android"]
+
+[package.metadata.apple]
+release_build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
+
