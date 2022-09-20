@@ -16,8 +16,10 @@ miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "d67ffe6950cf73d
 [package.metadata]
 app_name = "{{project-name}}"
 assets = ["assets"]
+icon = "assets/bob/icon.png"
 
 [package.metadata.android]
+app_wrapper = "quad"
 release_build_targets = ["aarch64-linux-android"]
 resources = ["res/android"]
 
