@@ -5,7 +5,8 @@ authors = ["{{authors}}"]
 edition = "2021"
 
 [dependencies]
-crossbow  = "0.1.3"
+crossbow  = "*"
+log = "0.4"
 anyhow = "1.0"
 subxt = "0.23.0"
 tokio = { version = "1.17", features = ["sync", "macros", "rt-multi-thread"] }
@@ -13,21 +14,30 @@ bevy = { version = "0.8.1", default-features = false, features = ["bevy_winit", 
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
 jsonrpsee = { version = "0.15.1", features = ["async-client", "client-ws-transport"] }
 
+[target.'cfg(target_os = "android")'.dependencies]
+ndk-glue = "0.7.0"
+
+[patch.crates-io]
+bevy = { git = "https://github.com/dodorare/bevy", rev = "732fc8c585ebd3a622153771a8c51ace93024a04" }
+
 [package.metadata]
 app_name = "Bevy Explorer"
 assets = ["assets"]
 
 [package.metadata.android]
-app_wrapper = "ndk-glue"
 release_build_targets = ["aarch64-linux-android"]
-resources = ["assets/res/android"]
+resources = ["res/android"]
 
 [package.metadata.apple]
 release_build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
-resources = ["assets/res/apple"]
+resources = ["res/apple"]
 
 [package.metadata.android.manifest]
 package = "com.crossbow.example.permissions"
 
 [[package.metadata.android.manifest.uses_permission]]
 name = "android.permission.INTERNET"
+
+[package.metadata.android.manifest.uses_sdk]
+min_sdk_version = 19
+target_sdk_version = 31
