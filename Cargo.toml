@@ -1,8 +1,11 @@
 [package]
-name = "{{project-name}}"
+name = "quad_project"
 version = "0.1.0"
 authors = ["{{authors}}"]
 edition = "2021"
+
+[toolchain]
+channel = "1.62"
 
 [dependencies]
 crossbow = "*"
@@ -14,7 +17,7 @@ macroquad = "=0.3.7"
 miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "d67ffe6950cf73df307e2d23aaa4726f14399985" }
 
 [package.metadata]
-app_name = "{{project-name}}"
+app_name = "Quad project"
 assets = ["assets"]
 icon = "assets/bob/icon.png"
 
