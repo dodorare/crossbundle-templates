@@ -26,17 +26,17 @@ app_wrapper = "quad"
 release_build_targets = ["aarch64-linux-android"]
 resources = ["res/android"]
 
-[[package.metadata.android.plugins_local_projects]]
-include = ":crossbow"
-dont_implement = true
-project_dir = "../../platform/android/java"
+# [[package.metadata.android.plugins_local_projects]]
+# include = ":crossbow"
+# dont_implement = true
+# project_dir = "../../platform/android/java"
 
 [[package.metadata.android.plugins_local_projects]]
 include = ":crossbow:lib"
 
-[[package.metadata.android.plugins_local_projects]]
-include = ":admob"
-project_dir = "../../plugins/admob-android/android"
+# [[package.metadata.android.plugins_local_projects]]
+# include = ":admob"
+# project_dir = "../../plugins/admob-android/android"
 
 [package.metadata.android.manifest]
 package = "com.crossbow.example.permissions"
