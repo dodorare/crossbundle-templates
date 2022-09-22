@@ -1,39 +1,138 @@
+use crossbow::Permission;
 use macroquad::prelude::*;
+use macroquad::ui::{hash, root_ui, Skin};
 
-#[macroquad::main("{{project-name}}")]
+#[macroquad::main("Macroquad UI")]
 async fn main() -> anyhow::Result<()> {
-    let rust_logo = load_texture("bob/rust.png").await?;
-    let ferris = load_texture("bob/ferris.png").await?;
+    #[cfg(target_os = "android")]
+    let crossbow = crossbow::android::CrossbowInstance::new();
+    #[cfg(target_os = "android")]
+    let admob: admob_android::AdMobPlugin = crossbow.get_plugin()?;
+
+    let skin = get_skin();
+    let mut label = "".to_owned();
+    let window_skin = skin.clone();
+    #[allow(unused_assignments)]
+    let mut btn_clicked = "";
 
     loop {
-        clear_background(LIGHTGRAY);
+        btn_clicked = "";
+        clear_background(WHITE);
 
-        set_camera(&Camera3D {
-            position: vec3(-20., 15., 0.),
-            up: vec3(0., 1., 0.),
-            target: vec3(0., 0., 0.),
-            ..Default::default()
+        root_ui().push_skin(&window_skin);
+        root_ui().window(hash!(), vec2(0.0, 50.0), vec2(1000.0, 1000.0), |ui| {
+            #[cfg(target_os = "android")]
+            ui.label(vec2(15.0, 0.0), "AdMob");
+            ui.label(vec2(15.0, 50.0), &label);
+
+            let btn_text = "Camera permission";
+            if ui.button(vec2(-15.0, 100.0), btn_text) {
+                btn_clicked = btn_text;
+            }
+            let btn_text = "Mic permission";
+            if ui.button(vec2(-15.0, 150.0), btn_text) {
+                btn_clicked = btn_text;
+            }
+            #[cfg(target_os = "ios")]
+            let btn_text = "Photos permission";
+            #[cfg(target_os = "ios")]
+            if ui.button(vec2(-15.0, 200.0), btn_text) {
+                btn_clicked = btn_text;
+            }
+            #[cfg(target_os = "android")]
+            let btn_text = "Show ad";
+            #[cfg(target_os = "android")]
+            if ui.button(vec2(-15.0, 250.0), btn_text) {
+                btn_clicked = btn_text;
+            }
         });
+        root_ui().pop_skin();
 
-        draw_grid(20, 1., BLACK, GRAY);
+        match btn_clicked {
+            "Camera permission" => {
+                let res = Permission::Camera.request_async().await?;
+                label = format!("Camera {:?}", res);
+            }
+            "Mic permission" => {
+                let res = Permission::Microphone.request_async().await?;
+                label = format!("Microphone {:?}", res);
+            }
+            #[cfg(target_os = "ios")]
+            "Photos permission" => {
+                let res = Permission::Photos.request_async().await?;
+                label = format!("Photos {:?}", res);
+            }
+            #[cfg(target_os = "android")]
+            "Show ad" => {
+                if !admob.is_initialized()? {
+                    println!("Calling AdMob::initialize()");
+                    admob.initialize(true, "G", false, true)?;
+                }
 
-        draw_cube_wires(vec3(0., 1., -6.), vec3(2., 2., 2.), DARKGREEN);
-        draw_cube_wires(vec3(0., 1., 6.), vec3(2., 2., 2.), DARKBLUE);
-        draw_cube_wires(vec3(2., 1., 2.), vec3(2., 2., 2.), YELLOW);
+                if admob.is_initialized()? && !admob.is_interstitial_loaded()? {
+                    println!("Calling load_interstitial()");
+                    admob.load_interstitial("ca-app-pub-3940256099942544/1033173712")?;
+                }
 
-        draw_plane(vec3(-8., 0., -8.), vec2(5., 5.), ferris, WHITE);
+                if admob.is_interstitial_loaded()? {
+                    println!("Calling show_interstitial()");
+                    admob.show_interstitial()?;
+                }
+            }
+            _ => {}
+        }
 
-        draw_cube(vec3(-5., 1., -2.), vec3(2., 2., 2.), rust_logo, WHITE);
-        draw_cube(vec3(-5., 1., 2.), vec3(2., 2., 2.), ferris, WHITE);
-        draw_cube(vec3(2., 0., -2.), vec3(0.4, 0.4, 0.4), None, BLACK);
+        #[cfg(target_os = "android")]
+        use crossbow::android::plugin::CrossbowPlugin;
+        #[cfg(target_os = "android")]
+        if let Ok(signal) = admob.get_receiver().try_recv() {
+            println!("Signal: {:?}", signal);
+            label = format!(
+                "{}:{}",
+                signal.name,
+                signal
+                    .args
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .concat()
+            );
+        }
 
-        draw_sphere(vec3(-8., 0., 0.), 1., None, BLUE);
+        next_frame().await;
+    }
+}
 
-        // Back to screen space, render some text
-
-        set_default_camera();
-        draw_text("WELCOME TO 3D WORLD", 10.0, 20.0, 30.0, BLACK);
-
-        next_frame().await
+fn get_skin() -> Skin {
+    let label_style = root_ui()
+        .style_builder()
+        .text_color(Color::from_rgba(180, 180, 120, 255))
+        .font_size(30)
+        .build();
+    let window_style = root_ui()
+        .style_builder()
+        .background_margin(RectOffset::new(20.0, 20.0, 10.0, 10.0))
+        .margin(RectOffset::new(-20.0, -30.0, 0.0, 0.0))
+        .build();
+    let button_style = root_ui()
+        .style_builder()
+        .background_margin(RectOffset::new(37.0, 37.0, 5.0, 5.0))
+        .margin(RectOffset::new(10.0, 10.0, 0.0, 0.0))
+        .text_color(Color::from_rgba(180, 180, 100, 255))
+        .font_size(40)
+        .build();
+    let editbox_style = root_ui()
+        .style_builder()
+        .background_margin(RectOffset::new(0., 0., 0., 0.))
+        .text_color(Color::from_rgba(120, 120, 120, 255))
+        .color_selected(Color::from_rgba(190, 190, 190, 255))
+        .font_size(50)
+        .build();
+    Skin {
+        editbox_style,
+        window_style,
+        button_style,
+        label_style,
+        ..root_ui().default_skin()
     }
 }

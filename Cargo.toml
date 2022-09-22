@@ -1,11 +1,9 @@
-[package]
-name = "quad_project"
-version = "0.1.0"
-authors = ["{{authors}}"]
-edition = "2021"
 
-[toolchain]
-channel = "1.62"
+[package]
+name = "macroquad-permissions"
+version = "0.2.3"
+authors = ["DodoRare Team <support@dodorare.com>"]
+edition = "2021"
 
 [dependencies]
 crossbow = "*"
@@ -16,16 +14,42 @@ macroquad = "=0.3.7"
 [patch.crates-io]
 miniquad = { git = "https://github.com/not-fl3/miniquad", rev = "d67ffe6950cf73df307e2d23aaa4726f14399985" }
 
+[target.'cfg(target_os = "android")'.dependencies]
+admob-android = "*"
+
 [package.metadata]
-app_name = "Quad project"
-assets = ["assets"]
-icon = "assets/bob/icon.png"
+app_name = "Permissions"
+permissions = ["camera", "microphone", "photos", "storage-read"]
 
 [package.metadata.android]
 app_wrapper = "quad"
 release_build_targets = ["aarch64-linux-android"]
 resources = ["res/android"]
 
+[[package.metadata.android.plugins_local_projects]]
+include = ":crossbow"
+dont_implement = true
+project_dir = "../../platform/android/java"
+
+[[package.metadata.android.plugins_local_projects]]
+include = ":crossbow:lib"
+
+[[package.metadata.android.plugins_local_projects]]
+include = ":admob"
+project_dir = "../../plugins/admob-android/android"
+
+[package.metadata.android.manifest]
+package = "com.crossbow.example.permissions"
+
+[package.metadata.android.manifest.uses_sdk]
+min_sdk_version = 19
+target_sdk_version = 31
+
 [package.metadata.apple]
 release_build_targets = ["aarch64-apple-ios", "x86_64-apple-ios"]
 resources = ["res/apple"]
+
+[package.metadata.apple.info_plist]
+CFBundleIdentifier = "com.crossbow.example.permissions"
+CFBundleVersion = "1.0"
+CFBundleShortVersionString = "1.0"
